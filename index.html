@@ -1,0 +1,47 @@
+<!doctype html>
+<html lang="de">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <title>Besichtigung</title>
+  <meta name="description" content="Umzugsbesichtigungen erfassen: Fotos, Kundendaten, Material und Leistungen.">
+  <meta name="theme-color" content="#2f5d93">
+  <meta name="robots" content="noindex, nofollow">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="default">
+  <meta name="apple-mobile-web-app-title" content="Besichtigung">
+  <meta name="format-detection" content="telephone=no">
+  <link rel="manifest" href="manifest.webmanifest">
+  <link rel="icon" href="icons/icon-192.png" type="image/png">
+  <link rel="apple-touch-icon" href="icons/apple-touch-icon.png">
+  <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+  <div id="fenster">
+    <header id="titel">
+      <button id="titel-links" class="titel-knopf" hidden></button>
+      <h1 id="titel-text">Besichtigungen</h1>
+      <button id="titel-rechts" class="titel-knopf" hidden></button>
+    </header>
+    <nav id="reiter" hidden></nav>
+    <main id="inhalt"></main>
+    <div id="statusleiste" hidden></div>
+    <footer id="leiste" hidden></footer>
+  </div>
+
+  <div id="update" hidden>
+    <span>Neue Version der App verfügbar.</span>
+    <button id="update-knopf" class="knopf">Neu laden</button>
+  </div>
+  <div id="meldung" role="status" aria-live="polite" hidden></div>
+  <div id="ebene"></div>
+
+  <input type="file" id="kamera" accept="image/*" capture="environment" hidden>
+  <input type="file" id="galerie" accept="image/*" multiple hidden>
+
+  <noscript>Diese App braucht JavaScript.</noscript>
+  <script src="vendor/jspdf.umd.min.js" defer></script>
+  <script type="module" src="js/app.js"></script>
+</body>
+</html>

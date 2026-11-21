@@ -1,0 +1,12 @@
+# Dieses Repo ist ÖFFENTLICH. Hier dürfen niemals Kundendaten, Fotos oder Zugriffstoken landen.
+besichtigungen/
+*.jpg
+*.jpeg
+*.heic
+*.pdf
+daten.json
+.env
+*.token
+token*.txt
+node_modules/
+.claude/settings.local.json

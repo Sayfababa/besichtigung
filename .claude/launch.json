@@ -1,0 +1,11 @@
+{
+  "version": "0.0.1",
+  "configurations": [
+    {
+      "name": "besichtigung",
+      "runtimeExecutable": "node",
+      "runtimeArgs": ["werkzeuge/testserver.js"],
+      "port": 8080
+    }
+  ]
+}
