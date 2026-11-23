@@ -5,6 +5,7 @@ besichtigungen/
 *.heic
 *.pdf
 daten.json
+kunden.json
 .env
 *.token
 token*.txt

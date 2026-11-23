@@ -3,7 +3,7 @@ import { db, requestPersistence, storageInfo } from './db.js';
 import { store } from './store.js';
 import { verarbeiteFoto } from './bild.js';
 import { berichtFuer } from './pdf.js';
-import { syncAlle, beiSyncStatus, ladeZugang, speichereZugang, pruefeVerbindung, fehlerText, syncLaeuft } from './sync.js';
+import { syncAlle, beiSyncStatus, ladeZugang, speichereZugang, pruefeVerbindung, fehlerText, syncLaeuft, kundenliste, ladeKundenliste } from './sync.js';
 import {
   APP_VERSION, STANDARD_RAEUME, STANDARD_MATERIAL, STANDARD_LEISTUNGEN, ETAGEN, GEBAEUDETEILE, STATUS_TEXT,
   uid, datumDE, neueBesichtigung, fotosNachRaum, esc, groesse, slug,
@@ -321,8 +321,12 @@ function adressGruppe(art, a, titelText) {
 }
 
 function malKunde(v) {
+  const nr = v.kunde.buero_id;
   inhalt.innerHTML = `
     <fieldset class="gruppe"><legend>Kunde</legend>
+      ${nr ? `<div class="verknuepft"><span>Kunde Nr. ${esc(nr)} aus dem Büro-Programm${v.kunde.ansprechpartner ? `<br><span class="klein-text">Ansprechpartner: ${esc(v.kunde.ansprechpartner)}</span>` : ''}</span>
+        <button type="button" class="knopf klein" data-kunde-loesen>Lösen</button></div>`
+        : '<button type="button" class="knopf breit" data-kundenliste>Aus Kundenliste übernehmen …</button>'}
       ${feld('kunde.name', v.kunde.name, 'Name', 'text', 'autocapitalize="words"')}
       ${feld('kunde.telefon', v.kunde.telefon, 'Telefon', 'tel')}
       ${feld('kunde.email', v.kunde.email, 'E-Mail', 'email', 'autocapitalize="off" spellcheck="false"')}
@@ -378,6 +382,8 @@ inhalt.addEventListener('change', e => {
 inhalt.addEventListener('click', e => {
   const v = aktuelle();
   if (!v || v.fotosEntfernt) return;
+  if (e.target.closest('[data-kundenliste]')) { kundeAusListe(v.id); return; }
+  if (e.target.closest('[data-kunde-loesen]')) { kundeLoesen(v.id); return; }
   const jn = e.target.closest('.janein button');
   if (jn) {
     const [a, b] = jn.dataset.pfad.split('.');
@@ -398,6 +404,100 @@ inhalt.addEventListener('click', e => {
     if (f) f.value = v.material[i].menge;
   }
 });
+
+// ---------- Kunde aus der Kundenliste des Büro-Programms ----------
+const falten = t => String(t || '').toLowerCase().replace(/ä/g, 'ae').replace(/ö/g, 'oe').replace(/ü/g, 'ue').replace(/ß/g, 'ss')
+  .normalize('NFKD').replace(/[\u0300-\u036f]/g, '');
+const ziffern = t => String(t || '').replace(/\D/g, '');
+
+function kundenTreffer(kunden, suche) {
+  const woerter = falten(suche).split(/\s+/).filter(Boolean);
+  const nur = ziffern(suche);
+  return kunden.filter(k => {
+    const text = falten([k.name, k.ansprechpartner, k.strasse, k.plz, k.ort, k.email, k.id].join(' '));
+    if (woerter.every(w => text.includes(w))) return true;
+    return nur.length >= 4 && ziffern(k.telefon).includes(nur);
+  });
+}
+
+function kundenZeilen(kunden, suche) {
+  if (!kunden.length) return '<div class="leer">Noch keine Kundenliste auf dem Handy.</div>';
+  const treffer = kundenTreffer(kunden, suche);
+  if (!treffer.length) return '<div class="leer">Kein Kunde gefunden.</div>';
+  const mehr = treffer.length > 60 ? `<div class="leer">… und ${treffer.length - 60} weitere. Bitte genauer suchen.</div>` : '';
+  return treffer.slice(0, 60).map(k => `<button type="button" class="kunde-zeile" data-kid="${esc(k.id)}">
+      <b>${esc(k.name)}</b>${k.ansprechpartner ? ` <span class="ap">(${esc(k.ansprechpartner)})</span>` : ''}
+      <span class="klein-text">${esc([k.strasse, [k.plz, k.ort].filter(Boolean).join(' ')].filter(Boolean).join(', ') || 'ohne Adresse')}${k.telefon ? ` · ${esc(k.telefon)}` : ''}</span>
+    </button>`).join('') + mehr;
+}
+
+function standText(l) {
+  if (!l.stand) return 'Noch keine Kundenliste geladen. Am PC „Neue Besichtigungen abrufen.bat“ starten, dann hier „Neu laden“.';
+  const d = new Date(l.stand);
+  return `${l.kunden.length} Kunden, Stand vom PC: ${datumDE(l.stand)} ${String(d.getHours()).padStart(2, '0')}:${String(d.getMinutes()).padStart(2, '0')} Uhr`;
+}
+
+async function kundeAusListe(id) {
+  let liste = await kundenliste();
+  const kid = await dialog({
+    titel: 'Kunde aus Kundenliste',
+    html: `<label class="feld"><span>Suchen (Name, Straße, Ort, Telefon)</span>
+        <input type="search" id="k-suche" autocomplete="off" autocapitalize="off" spellcheck="false"></label>
+      <div class="kunden-liste" id="k-liste">${kundenZeilen(liste.kunden, '')}</div>
+      <p class="klein-text" id="k-stand" style="margin:6px 0 0">${esc(standText(liste))}</p>`,
+    knoepfe: [{ text: 'Neu laden', art: 'k-neu', pruefen: () => false }, { text: 'Abbrechen', wert: null }],
+    beimOeffnen: (w, zu) => {
+      const suche = w.querySelector('#k-suche');
+      const box = w.querySelector('#k-liste');
+      const stand = w.querySelector('#k-stand');
+      const neuKnopf = w.querySelector('.k-neu');
+      const zeichne = () => { box.innerHTML = kundenZeilen(liste.kunden, suche.value); };
+      suche.addEventListener('input', zeichne);
+      box.addEventListener('click', e => { const z = e.target.closest('[data-kid]'); if (z) zu(z.dataset.kid); });
+      const laden = async erzwingen => {
+        if (!navigator.onLine) { if (erzwingen) meldung('Kein Internet – es wird die gespeicherte Liste benutzt.'); return; }
+        neuKnopf.disabled = true;
+        stand.textContent = 'Lade Kundenliste …';
+        try {
+          liste = (await ladeKundenliste({ erzwingen: true })).liste;
+          zeichne();
+        } catch (e) {
+          if (erzwingen) meldung('Kundenliste: ' + fehlerText(e));
+        } finally {
+          neuKnopf.disabled = false;
+          stand.textContent = standText(liste);
+        }
+      };
+      neuKnopf.addEventListener('click', () => laden(true));
+      laden(false); // im Hintergrund nach einer neueren Liste schauen
+      if (liste.kunden.length) setTimeout(() => suche.focus(), 50);
+    },
+  });
+  if (kid == null) return;
+  const k = liste.kunden.find(x => String(x.id) === String(kid));
+  if (!k) return;
+  const v = store.get(id);
+  // Was schon eingetragen ist und anders wäre, nur nach Rückfrage überschreiben
+  const neu = [['kunde', 'name', k.name, 'Name'], ['kunde', 'telefon', k.telefon, 'Telefon'], ['kunde', 'email', k.email, 'E-Mail'],
+    ['auszug', 'strasse', k.strasse, 'Straße'], ['auszug', 'plz', k.plz, 'PLZ'], ['auszug', 'ort', k.ort, 'Ort']];
+  const konflikte = neu.filter(([a, b, w]) => w && String(v[a][b] || '').trim() && String(v[a][b]).trim() !== w);
+  if (konflikte.length && !(await frage(`Hier ist schon etwas anderes eingetragen:<br>${konflikte.map(([a, b, w, n]) =>
+    `<b>${n}:</b> ${esc(v[a][b])} → ${esc(w)}`).join('<br>')}<br><br>Mit den Angaben aus der Kundenliste überschreiben?`, 'Überschreiben'))) return;
+  store.update(id, x => {
+    for (const [a, b, w] of neu) if (w) x[a][b] = w;
+    x.kunde.buero_id = k.id;
+    x.kunde.ansprechpartner = k.ansprechpartner || '';
+  }, { inhaltlich: true });
+  $('#titel-text').textContent = k.name;
+  malInhalt();
+  meldung(`Übernommen: ${k.name}`);
+}
+
+async function kundeLoesen(id) {
+  if (!(await frage('Verknüpfung mit dem Kunden im Büro-Programm lösen? Die eingetragenen Angaben bleiben stehen. Am PC wird dann ein passender Kunde gesucht oder neu angelegt.', 'Lösen'))) return;
+  store.update(id, x => { x.kunde.buero_id = null; x.kunde.ansprechpartner = ''; }, { inhaltlich: true });
+  malInhalt();
+}
 
 // ---------- Reiter „Fotos“ ----------
 async function malFotos(v) {
@@ -814,6 +914,10 @@ async function zeigeEinstellungen() {
       </div>
       <div id="e-ergebnis" class="klein-text" style="margin-top:6px"></div>
     </fieldset>
+    <fieldset class="gruppe"><legend>Kundenliste vom PC</legend>
+      <p style="margin:0 0 6px" id="e-kunden">${esc(standText(await kundenliste()))}</p>
+      <button class="knopf klein" id="e-kunden-laden">Jetzt laden</button>
+    </fieldset>
     <fieldset class="gruppe"><legend>Listen</legend>
       ${listeHtml('raeume', 'Räume')}
       ${listeHtml('material', 'Material (gilt für neue Besichtigungen)')}
@@ -858,6 +962,16 @@ async function zeigeEinstellungen() {
       syncAlle();
     } catch (e) {
       erg.textContent = 'Fehler: ' + fehlerText(e) + ' (Nicht gespeichert.)';
+    }
+  };
+  $('#e-kunden-laden').onclick = async () => {
+    const p = $('#e-kunden');
+    if (!navigator.onLine) return meldung('Kein Internet.');
+    p.textContent = 'Lade Kundenliste …';
+    try {
+      p.textContent = standText((await ladeKundenliste({ erzwingen: true })).liste);
+    } catch (e) {
+      p.textContent = 'Fehler: ' + fehlerText(e);
     }
   };
   const tw = $('#e-tokenweg');

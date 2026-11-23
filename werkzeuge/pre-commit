@@ -4,7 +4,7 @@
 fehler=0
 for f in $(git diff --cached --name-only --diff-filter=ACM); do
   case "$f" in
-    *.jpg|*.jpeg|*.JPG|*.heic|*.pdf|besichtigungen/*|*daten.json)
+    *.jpg|*.jpeg|*.JPG|*.heic|*.pdf|besichtigungen/*|*daten.json|*kunden.json)
       echo "GESPERRT: $f sieht nach Kundendaten aus."; fehler=1 ;;
   esac
   if git show ":$f" 2>/dev/null | grep -aEq 'github_pat_[A-Za-z0-9_]{20,}|ghp_[A-Za-z0-9]{30,}'; then

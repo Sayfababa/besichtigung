@@ -1,6 +1,6 @@
 // Datenmodell, Voreinstellungen und kleine Hilfsfunktionen.
 
-export const APP_VERSION = '1.0.0';
+export const APP_VERSION = '1.1.0';
 
 export const STANDARD_RAEUME = ['Küche', 'Wohnzimmer', 'Schlafzimmer', 'Bad', 'Flur', 'Kinderzimmer',
   'Keller', 'Dachboden', 'Balkon', 'Garage', 'Sonstiges'];
@@ -53,7 +53,7 @@ export function neueBesichtigung(material, leistungen) {
     letzterSync: null,
     syncFehler: '',
     fotosEntfernt: false,   // Fotos wurden vom Handy entfernt (nur noch lesen)
-    kunde: { name: '', telefon: '', email: '' },
+    kunde: { name: '', telefon: '', email: '', buero_id: null, ansprechpartner: '' }, // buero_id = Kunden-Nr. im Büro-Programm
     besichtigung: { datum: heuteISO(now), uhrzeit: jetztZeit(now) },
     wunschtermin: { datum: '', uhrzeit: '', notiz: '' },
     auszug: leereAdresse(),
@@ -131,7 +131,8 @@ export function datenJson(v, dateinamen) {
     status: v.status,
     erstellt: v.erstellt,
     geaendert: v.geaendert,
-    kunde: { name: v.kunde.name.trim(), telefon: v.kunde.telefon.trim(), email: v.kunde.email.trim() },
+    kunde: { name: v.kunde.name.trim(), telefon: v.kunde.telefon.trim(), email: v.kunde.email.trim(),
+      buero_kunden_nr: v.kunde.buero_id || null, ansprechpartner: (v.kunde.ansprechpartner || '').trim() },
     besichtigung: { datum: v.besichtigung.datum || null, uhrzeit: v.besichtigung.uhrzeit || null },
     umzug_wunschtermin: { datum: v.wunschtermin.datum || null, uhrzeit: v.wunschtermin.uhrzeit || null,
       notiz: v.wunschtermin.notiz.trim() },

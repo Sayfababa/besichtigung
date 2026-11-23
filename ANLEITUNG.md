@@ -151,6 +151,12 @@ Danach im Ordner `Desktop\Besichtigungen` einmal doppelt auf **`Einrichten.bat`*
 Doppelklick auf **`Desktop\Besichtigungen\Neue Besichtigungen abrufen.bat`**.
 Das Fenster zeigt an, welche Besichtigungen neu sind. (Im Hintergrund läuft der Befehl `git pull`.)
 
+Danach schickt das Fenster automatisch die **Kundenliste aus deinem Büro-Programm ans Handy**, wenn das Büro-Programm läuft
+(sonst steht dort „Kundenliste NICHT gesendet“, dann `start.bat` starten und die .bat nochmal doppelklicken).
+- Dabei wird aus dem Büro-Programm **nur gelesen**. Es wird dort nichts geändert.
+- Geschickt werden nur Kunden-Nr., Name, Ansprechpartner, Adresse, Telefon und E-Mail (keine Umsätze, keine Notizen).
+- Die Liste landet als `kunden.json` im **privaten** Daten-Repo. Die App holt sie, sobald sie mit Internet geöffnet ist.
+
 ### 3.3 Mit Claude Code eine Besichtigung verarbeiten
 
 1. Dein Büro-Programm starten (`start.bat`), sonst kann Claude keinen Kunden anlegen.
@@ -166,7 +172,8 @@ Das Fenster zeigt an, welche Besichtigungen neu sind. (Im Hintergrund läuft der
 4. Claude macht dann Folgendes:
    - Es liest `daten.json` und **sieht sich alle Fotos an**.
    - Es erstellt die **Inventarliste** `inventar.pdf` im Besichtigungsordner, mit Gegenstand, Anzahl, Raum und Hinweisen. Deine Kommentare haben Vorrang, z. B. „Sofa bleibt da“.
-   - Es prüft, ob es den Kunden in deinem Büro-Programm schon gibt (über Telefon und E-Mail), und **legt ihn sonst neu an**. Als Kundenadresse nimmt es die Auszugsadresse.
+   - Hast du den Kunden am iPhone **aus der Kundenliste** übernommen, legt Claude **keinen neuen Kunden** an. Hast du vor Ort Telefon, E-Mail oder Adresse geändert, zeigt Claude dir „alt → neu“ und **fragt**, bevor es etwas ändert.
+   - Sonst prüft es, ob es den Kunden in deinem Büro-Programm schon gibt (über Telefon und E-Mail), und **legt ihn sonst neu an**. Als Kundenadresse nimmt es die Auszugsadresse.
    - Es trägt den **Umzug als Termin** in den Kalender ein, wenn ein Wunschtermin angegeben ist.
    - Am Ende zeigt es dir eine kurze Zusammenfassung.
    - Die Inventarliste bleibt **nur auf dem PC** und wird nicht hochgeladen.
@@ -191,6 +198,10 @@ Sie werden nach **`Desktop\Besichtigungen-Archiv`** verschoben und aus dem Repo 
 
 1. App öffnen und **+ Neue Besichtigung** tippen. Datum und Uhrzeit sind schon ausgefüllt.
 2. **Reiter „Kunde“**: Name, Telefon, E-Mail, Wunschtermin, Auszugs- und Einzugsadresse.
+   **Kunde schon im Büro-Programm?** Oben auf **Aus Kundenliste übernehmen …** tippen, Namen, Straße oder Telefon suchen und antippen.
+   Name, Telefon, E-Mail und die Adresse (als Auszugsadresse) werden eingetragen, und die Besichtigung merkt sich die Kunden-Nr.
+   Das geht auch ohne Internet (mit der zuletzt geladenen Liste). **Neu laden** holt die neueste Liste.
+   Mit **Lösen** nimmst du die Verknüpfung wieder weg, falls du den falschen Kunden erwischt hast.
    Bei Ja/Nein-Fragen: nochmal tippen = wieder leer (unbekannt).
 3. **Fotos**: Unten auf **Foto** tippen und fotografieren. Der zuletzt gewählte Raum ist schon markiert, also nur noch Kommentar schreiben und **Fertig** tippen.
    - **Diktieren**: Im Kommentarfeld auf der Tastatur unten das **Mikrofon** antippen. Das geht auch offline, z. B. im Keller.

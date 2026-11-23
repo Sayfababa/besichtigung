@@ -7,7 +7,7 @@ $probleme = @()
 
 $dateien = git ls-files --cached --others --exclude-standard
 foreach ($d in $dateien) {
-  if ($d -match '\.(jpe?g|heic|pdf)$' -or $d -match '(^|/)besichtigungen/' -or $d -match '(^|/)daten\.json$') {
+  if ($d -match '\.(jpe?g|heic|pdf)$' -or $d -match '(^|/)besichtigungen/' -or $d -match '(^|/)(daten|kunden)\.json$') {
     $probleme += "Verdaechtige Datei: $d"
     continue
   }

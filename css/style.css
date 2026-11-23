@@ -284,3 +284,22 @@ input:disabled, select:disabled, textarea:disabled { background: #f3f2ee; color:
 .einstellungs-liste div { display: flex; align-items: center; gap: 6px; padding: 3px 3px 3px 8px; border-bottom: 1px solid #e3e3e3; }
 .einstellungs-liste div:last-child { border-bottom: none; }
 .einstellungs-liste span { flex: 1; }
+
+/* ---------- Kundenliste ---------- */
+.knopf.breit { width: 100%; margin-bottom: 8px; }
+.verknuepft {
+  display: flex; align-items: center; gap: 8px; justify-content: space-between;
+  border: 1px solid var(--rahmen); background: var(--blau-hell); padding: 6px 8px; margin-bottom: 8px; font-size: 14px;
+}
+.kunden-liste {
+  background: var(--feld); border: 1px solid var(--rahmen-feld);
+  max-height: 46vh; overflow-y: auto; -webkit-overflow-scrolling: touch;
+}
+.kunden-liste .leer { padding: 10px; color: var(--text-3); font-size: 14px; }
+.kunde-zeile {
+  display: block; width: 100%; text-align: left; background: none; border: none;
+  border-bottom: 1px solid #e3e1da; padding: 8px 9px; min-height: 44px;
+}
+.kunde-zeile:active { background: var(--blau-hell); }
+.kunde-zeile .klein-text { display: block; }
+.kunde-zeile .ap { font-size: 13px; color: var(--text-2); }

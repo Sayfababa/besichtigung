@@ -1,6 +1,6 @@
 // Service Worker: hält die App offline verfügbar.
 // Bei jeder neuen Version VERSION erhöhen – dann bekommt das Handy den Hinweis „Neue Version“.
-const VERSION = 'v1.0.0';
+const VERSION = 'v1.1.0';
 const CACHE = 'besichtigung-' + VERSION;
 const DATEIEN = [
   './',

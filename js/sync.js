@@ -94,12 +94,52 @@ export function beiSyncStatus(fn) { hoerer.add(fn); return () => hoerer.delete(f
 function melde(info) { for (const fn of hoerer) { try { fn(info); } catch (e) { console.error(e); } } }
 export function syncLaeuft() { return laeuft; }
 
+// ---------- Kundenliste vom PC (kunden.json im Daten-Repo, nur lesen) ----------
+export async function kundenliste() { return (await db.get('kunden')) || { kunden: [], stand: '', sha: '', geprueft: 0 }; }
+
+let kundenLaeuft = false;
+// Holt kunden.json, wenn sie sich geändert hat. Ohne „erzwingen“ höchstens alle 10 Minuten.
+export async function ladeKundenliste({ erzwingen = false } = {}) {
+  const alt = await kundenliste();
+  if (kundenLaeuft || !navigator.onLine) return { liste: alt, neu: false };
+  if (!erzwingen && Date.now() - (alt.geprueft || 0) < 10 * 60 * 1000) return { liste: alt, neu: false };
+  const z = await ladeZugang();
+  if (!z.token || !z.owner || !z.repo) return { liste: alt, neu: false };
+  kundenLaeuft = true;
+  try {
+    const api = gh(z);
+    let datei;
+    try {
+      datei = await api('GET', `/repos/${enc(z.owner)}/${enc(z.repo)}/contents/kunden.json`);
+    } catch (e) {
+      if (e.status !== 404) throw e;
+      const leer = { ...alt, geprueft: Date.now() };
+      await db.set('kunden', leer);
+      return { liste: leer, neu: false };
+    }
+    if (datei.sha === alt.sha) {
+      const gleich = { ...alt, geprueft: Date.now() };
+      await db.set('kunden', gleich);
+      return { liste: gleich, neu: false };
+    }
+    const bytes = Uint8Array.from(atob(String(datei.content || '').replace(/\s/g, '')), c => c.charCodeAt(0));
+    const json = JSON.parse(new TextDecoder().decode(bytes));
+    if (!json || !Array.isArray(json.kunden)) throw new Error('kunden.json hat ein unbekanntes Format.');
+    const neu = { kunden: json.kunden, stand: json.stand || '', sha: datei.sha, geprueft: Date.now() };
+    await db.set('kunden', neu);
+    return { liste: neu, neu: true };
+  } finally {
+    kundenLaeuft = false;
+  }
+}
+
 // Alle vorgemerkten Besichtigungen hochladen (nacheinander)
 export async function syncAlle() {
   if (laeuft) return;
   if (!navigator.onLine) return;
   const z = await ladeZugang();
   if (!z.token) return;
+  ladeKundenliste().catch(e => console.warn('Kundenliste:', fehlerText(e)));
   const warten = store.alle().filter(v => v.wartet && !v.fotosEntfernt);
   if (!warten.length) return;
   laeuft = true;
