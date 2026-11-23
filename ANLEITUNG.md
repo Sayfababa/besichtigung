@@ -148,7 +148,14 @@ Danach im Ordner `Desktop\Besichtigungen` einmal doppelt auf **`Einrichten.bat`*
 
 ### 3.2 Neue Besichtigungen abrufen
 
-Doppelklick auf **`Desktop\Besichtigungen\Neue Besichtigungen abrufen.bat`**.
+**Das passiert automatisch:** Die Windows-Aufgabe **„Besichtigungen Automatik“** läuft alle 15 Minuten und beim Anmelden,
+unsichtbar im Hintergrund. Sie holt neue Besichtigungen auf den PC und schickt die Kundenliste ans Handy.
+- Sie **ergänzt nur**. Es wird nichts gelöscht oder überschrieben, und im Büro-Programm wird nur gelesen.
+- Kunde anlegen und Inventarliste macht sie **nicht**, das bleibt bei `/besichtigung` (3.3), damit du alles prüfen kannst.
+- Was passiert ist, steht in `Desktop\Besichtigungen\werkzeuge\automatik.log`.
+- Ausschalten: Startmenü → „Aufgabenplanung“ → „Besichtigungen Automatik“ → rechte Maustaste → **Deaktivieren**.
+
+**Sofort statt in bis zu 15 Minuten:** Doppelklick auf **`Desktop\Besichtigungen\Neue Besichtigungen abrufen.bat`**.
 Das Fenster zeigt an, welche Besichtigungen neu sind. (Im Hintergrund läuft der Befehl `git pull`.)
 
 Danach schickt das Fenster automatisch die **Kundenliste aus deinem Büro-Programm ans Handy**, wenn das Büro-Programm läuft
